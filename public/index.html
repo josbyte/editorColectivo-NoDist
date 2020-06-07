@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Editor colectivo</title>
+    <script src="/bower_components/codemirror/lib/codemirror.js"></script>
+    <link rel="stylesheet" href="/bower_components/codemirror/lib/codemirror.css">
+    <script src="/bower_components/codemirror/mode/javascript/javascript.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/bower_components/jquery/dist/jquery.min.js"></script>
+    <link href="//cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <link href="//cdn.quilljs.com/1.3.6/quill.bubble.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.js" crossorigin="anonymous"></script>
+  </head>
+  <style>
+    .ql-editor{
+      height: 50vh;
+    }
+  </style>
+  <body style="background-color: lightgray;">
+  <br>
+
+  <p style="font-size: 2em; padding-left: 5em;">Write<b>JOS</b><p></p>
+    <div id="editor-wrapper" style="margin-left: 10em; margin-right: 10em; margin-bottom: 25vh; background-color: white;">
+        <div id="toolbar" class="sc-toolbar-container toolbar" style="z-index: -1;">
+          <div class="sc-format-group">
+              <span class="sc-bold sc-format-button"></span>
+              <span class="sc-italic sc-format-button"></span>
+              <span class="sc-strike sc-format-button"></span>
+              <span class="sc-underline sc-format-button"></span>
+              <span class="sc-link sc-format-button"></span>
+              <span class="sc-format-separator"></span>
+          </div>
+          <div id="editor">
+
+          </div>
+        </div>
+    </div>
+    <script>
+        var io = io();
+        var container = document.getElementById('editor');
+
+        var toolbarOptions = [['bold', 'italic', 'underline'], ['link'], ['background', 'color'], ['blockquote'], ['list', 'indent']];
+        var quill = new Quill(container, {
+          modules: { toolbar: toolbarOptions },
+          theme: 'snow',
+          placeholder: 'Escribe un documento aquí...',
+        });
+
+        setInterval(function(){ 
+          io.emit('getEditorText')
+        }, 400);
+        io.on('updateEditorText', function(data){
+            var editorContent = document.getElementById("editor")
+            console.log(data)
+            editorContent.innerHTML=data
+            editorContent.focus();
+          })
+        $(document).ready(function() {
+          $(document).keyup (function(e) { //hace update del documento cuando alguein pulsa una tecla
+            var editorContent = document.getElementById("editor").innerHTML
+            io.emit('updateEditor', editorContent)
+          });
+        });
+
+    </script>
+  </body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

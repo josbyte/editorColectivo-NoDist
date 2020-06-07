@@ -1,0 +1,21 @@
+{
+  "name": "text-collaborative",
+  "description": "",
+  "main": "index.js",
+  "authors": [
+    "Jos"
+  ],
+  "license": "ISC",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "^3.5.1",
+    "codemirror": "^5.54.0"
+  }
+}
