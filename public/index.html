@@ -46,22 +46,23 @@
           theme: 'snow',
           placeholder: 'Escribe un documento aquí...',
         });
-
-        setInterval(function(){ 
-          io.emit('getEditorText')
-        }, 400);
+        function replaceAll(string, search, replace) {
+          return string.split(search).join(replace);
+        }
         io.on('updateEditorText', function(data){
             var editorContent = document.getElementById("editor")
-            console.log(data)
-            editorContent.innerHTML=data
-            editorContent.focus();
+            editorContent.childNodes[0].innerHTML=data
           })
+        var editorContent = document.getElementById("editor").childNodes[0]
         $(document).ready(function() {
-          $(document).keyup (function(e) { //hace update del documento cuando alguein pulsa una tecla
-            var editorContent = document.getElementById("editor").innerHTML
-            io.emit('updateEditor', editorContent)
+          $(document).keyup (function(e) { 
+
           });
         });
+        quill.on('text-change', function() {
+          console.log(editorContent.innerHTML)
+          io.emit("updateEditor", editorContent.innerHTML)
+        })
 
     </script>
   </body>
