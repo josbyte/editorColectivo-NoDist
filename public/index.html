@@ -31,27 +31,34 @@
               <span class="sc-link sc-format-button"></span>
               <span class="sc-format-separator"></span>
           </div>
+        </div>
           <div id="editor">
 
           </div>
-        </div>
     </div>
     <script>
         var io = io();
         var container = document.getElementById('editor');
 
-        var toolbarOptions = [['bold', 'italic', 'underline'], ['link'], ['background', 'color'], ['blockquote'], ['list', 'indent']];
+        var toolbarOptions = [['bold', 'italic', 'underline'],  ['background', 'color'], ['link'], ['blockquote'], ['list', 'indent']];
         var quill = new Quill(container, {
           modules: { toolbar: toolbarOptions },
           theme: 'snow',
-          placeholder: 'Escribe un documento aquí...',
+          placeholder: 'Escribe un documento...',
         });
         function replaceAll(string, search, replace) {
           return string.split(search).join(replace);
         }
         io.on('updateEditorText', function(data){
             var editorContent = document.getElementById("editor")
+            var cursor = quill.getSelection()
+            if (cursor != null){
+              console.log(cursor.index)
+            }
             editorContent.childNodes[0].innerHTML=data
+            if (cursor != null){
+              setTimeout(() => quill.setSelection(cursor.index, cursor.index), 10)
+            }
           })
         var editorContent = document.getElementById("editor").childNodes[0]
         $(document).ready(function() {
@@ -60,8 +67,10 @@
           });
         });
         quill.on('text-change', function() {
-          console.log(editorContent.innerHTML)
-          io.emit("updateEditor", editorContent.innerHTML)
+          if(!editorContent.innerHTML.includes("<span>")){
+            console.log(editorContent.innerHTML)
+            io.emit("updateEditor", editorContent.innerHTML)
+          }
         })
 
     </script>

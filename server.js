@@ -4,13 +4,19 @@ var http = require("http").Server(app);
 var io = require("socket.io")(http);
 
 // Serve HTML
+app.set( 'port', ( process.env.PORT || 8080 ));
+
 app.get("/", function(req, res) {
+  res.sendFile(__dirname + "/public/login.html");
+});
+app.get("/editor", function(req, res) {
   res.sendFile(__dirname + "/public/index.html");
 });
 
 app.use("/bower_components", express.static("bower_components"));
 
 var editorText='a'
+var usersOnline=[]
 
 io.on("connection", function(socket) {
     console.log("a user connected");
@@ -23,9 +29,13 @@ io.on("connection", function(socket) {
       io.sockets.emit('updateEditorText', editorText)
       console.log("update: "+editorText)
     })
+    socket.on('saveUser', function(user, id){
+      usersOnline.push({user, id})
+      socket.emit('sendToEditor', id)
+    })
   });
 
 // Setup Express Listener
-http.listen(8080, "0.0.0.0", function() {
+http.listen(app.get( 'port' ), function() {
   console.log("listening on: 0.0.0.0:8080");
 });
