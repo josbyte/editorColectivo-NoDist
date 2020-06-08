@@ -11,6 +11,7 @@
     <link href="//cdn.quilljs.com/1.3.6/quill.bubble.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.js" crossorigin="anonymous"></script>
+    <script src="js/jsPDF/dist/jspdf.min.js"></script>
   </head>
   <style>
     .ql-editor{
@@ -19,9 +20,8 @@
   </style>
   <body style="background-color: lightgray;">
   <br>
-
-  <p style="font-size: 2em; padding-left: 5em;">Write<b>JOS</b><p></p>
-    <div id="editor-wrapper" style="margin-left: 10em; margin-right: 10em; margin-bottom: 25vh; background-color: white;">
+  <p style="font-size: 2em; padding-left: 5em;">Write<b>JOS</b><p>
+    <div id="editor-wrapper" style="margin-left: 10em; margin-right: 10em; margin-bottom: 5vh; background-color: white;">
         <div id="toolbar" class="sc-toolbar-container toolbar" style="z-index: -1;">
           <div class="sc-format-group">
               <span class="sc-bold sc-format-button"></span>
@@ -35,43 +35,112 @@
           <div id="editor">
 
           </div>
+          <p id="user"></p></p>
+          <ul id="escribiendo">
+          </ul> 
     </div>
-    <script>
+    <button type="button" onclick="function()">Convertir chat a pdf</button> 
+    <h2>Usuarios online:</h2>
+    <ul id="usersOnline">
+    </ul>  
+    <script>jos00098
         var io = io();
+        var doc = new jsPDF();
         var container = document.getElementById('editor');
 
-        var toolbarOptions = [['bold', 'italic', 'underline'],  ['background', 'color'], ['link'], ['blockquote'], ['list', 'indent']];
+        setInterval(function(){ io.emit("getUsersOnline") }, 3000);
+        io.on('receiveUsersOnline', function(users){
+          ul=document.getElementById("usersOnline")
+          ul.innerHTML=null
+          for (i = 0; i < users.length; i++){
+            li=document.createElement("li")
+            li.innerHTML=users[i].split('/')[0];
+            ul.append(li)
+          }
+        })
+        var usuario= ""
+        io.emit('getUserById', getCookie("ioid"))
+        io.on('sendUserById', function(user){
+          var containerUser=document.getElementById("user")
+          containerUser.innerHTML="Usuario actual: "+user
+          usuario=user
+        })
+        var toolbarOptions = [['bold', 'italic', 'underline'],  [{'color': ["#000000", "#e60000", "#ff9900", "#ffff00", "#008a00", "#0066cc", "#9933ff", "#ffffff", "#facccc", "#ffebcc", "#ffffcc", "#cce8cc", "#cce0f5", "#ebd6ff", "#bbbbbb", "#f06666", "#ffc266", "#ffff66", "#66b966", "#66a3e0", "#c285ff", "#888888", "#a10000", "#b26b00", "#b2b200", "#006100", "#0047b2", "#6b24b2", "#444444", "#5c0000", "#663d00", "#666600", "#003700", "#002966", "#3d1466", 'custom-color']}, {'background': ["#000000", "#e60000", "#ff9900", "#ffff00", "#008a00", "#0066cc", "#9933ff", "#ffffff", "#facccc", "#ffebcc", "#ffffcc", "#cce8cc", "#cce0f5", "#ebd6ff", "#bbbbbb", "#f06666", "#ffc266", "#ffff66", "#66b966", "#66a3e0", "#c285ff", "#888888", "#a10000", "#b26b00", "#b2b200", "#006100", "#0047b2", "#6b24b2", "#444444", "#5c0000", "#663d00", "#666600", "#003700", "#002966", "#3d1466", 'custom-color']}], ['link'], ['blockquote'], ['image'], ['clear']];
         var quill = new Quill(container, {
-          modules: { toolbar: toolbarOptions },
+          modules: { 
+            toolbar: { 
+              container: toolbarOptions, 
+              handlers: { 
+                image: imageHandler}
+              }
+            },
           theme: 'snow',
           placeholder: 'Escribe un documento...',
         });
+        function imageHandler() {
+            var range = quill.getSelection();
+            var value = prompt('What is the image URL');
+            if(value){
+                quill.insertEmbed(range.index, 'image', value, Quill.sources.USER);
+            }
+        }
+        function getCookie(name) {
+            var nameEQ = name + "=";
+            var ca = document.cookie.split(';');
+            for(var i=0;i < ca.length;i++) {
+                var c = ca[i];
+                while (c.charAt(0)==' ') c = c.substring(1,c.length);
+                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+            }
+            return null;
+        }
         function replaceAll(string, search, replace) {
           return string.split(search).join(replace);
         }
+        var cursor = ""
         io.on('updateEditorText', function(data){
             var editorContent = document.getElementById("editor")
-            var cursor = quill.getSelection()
-            if (cursor != null){
-              console.log(cursor.index)
-            }
+            cursor = quill.getSelection()
             editorContent.childNodes[0].innerHTML=data
             if (cursor != null){
-              setTimeout(() => quill.setSelection(cursor.index, cursor.index), 10)
+              setTimeout(() => quill.setSelection(cursor.index, cursor.index), 0)
             }
           })
+        io.on('sendUserTyping', function(user){
+          console.log("c"+user)
+          crearEscribiendo(user)
+        })
         var editorContent = document.getElementById("editor").childNodes[0]
         $(document).ready(function() {
-          $(document).keyup (function(e) { 
-
+          $(document).keydown (function(e) {
+            console.log("a")
+            io.emit('userTyping', usuario)
+            crearEscribiendo(usuario)
           });
         });
-        quill.on('text-change', function() {
+        setTimeout(() => quill.setSelection(cursor.index, cursor.index), 0)
+        $(editorContent).keyup('input',function(){
+          console.log("shit")
+          setTimeout(() => updatearTexto(), 100)
+        });
+        $("body").on('mouseup',function(){
+          setTimeout(() => updatearTexto(), 100)
+        })
+        function crearEscribiendo(user){
+          ul=document.getElementById("escribiendo")
+          if(!ul.innerHTML.includes(user)){
+            li=document.createElement("li")
+            li.innerHTML=user+" esta escribiendo"
+            li.setAttribute("id", user+"typing"); 
+            ul.append(li)
+            setTimeout(() => document.getElementById(user+"typing").remove(), 3000)
+          }
+        }
+        function updatearTexto() {
           if(!editorContent.innerHTML.includes("<span>")){
-            console.log(editorContent.innerHTML)
             io.emit("updateEditor", editorContent.innerHTML)
           }
-        })
+        }
 
     </script>
   </body>

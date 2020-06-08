@@ -22,16 +22,30 @@ io.on("connection", function(socket) {
     console.log("a user connected");
     socket.emit('updateEditorText', editorText)
     socket.on("disconnect", function() {
-      console.log("user disconnected");
+      console.log(usersOnline)
+      console.log(socket.id);
     });
     socket.on('updateEditor', function(data){
       editorText = data
-      io.sockets.emit('updateEditorText', editorText)
-      console.log("update: "+editorText)
+      socket.broadcast.emit('updateEditorText', editorText)
     })
     socket.on('saveUser', function(user, id){
-      usersOnline.push({user, id})
+      usersOnline.push(user+"/"+id)
       socket.emit('sendToEditor', id)
+    })
+    socket.on('getUserById', function(id){
+      user=usersOnline.find(a =>a.includes(id))
+      user=user.split('/')[0];
+      socket.emit('sendUserById', user)
+      console.log(socket.id)
+      console.log(usersOnline.find(a =>a.includes(id)))
+    })
+    socket.on('getUsersOnline', function(){
+      socket.emit('receiveUsersOnline', usersOnline)
+    })
+    socket.on('userTyping', function(user){
+      console.log("b"+user)
+      socket.broadcast.emit('sendUserTyping', user)
     })
   });
 

@@ -25,13 +25,23 @@
   </div>
     <script>
         var io = io();
+        function setCookie(name,value,days) {
+            var expires = "";
+            if (days) {
+                var date = new Date();
+                date.setTime(date.getTime() + (days*24*60*60*1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+        }
         function saveName(){
             user = document.getElementById("fname").value
             id = io.id
             io.emit('saveUser', user, id)
         }
-        io.on('sendToEditor', function(){
-            window.location.href = "./editor";
+        io.on('sendToEditor', function(id){
+          setCookie("ioid", id)
+          window.location.href = "./editor";
         })
     </script>
   </body>
