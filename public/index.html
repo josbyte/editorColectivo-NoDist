@@ -11,7 +11,7 @@
     <link href="//cdn.quilljs.com/1.3.6/quill.bubble.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.js" crossorigin="anonymous"></script>
-    <script src="js/jsPDF/dist/jspdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.4/jspdf.min.js"></script>
   </head>
   <style>
     .ql-editor{
@@ -39,11 +39,12 @@
           <ul id="escribiendo">
           </ul> 
     </div>
-    <button type="button" onclick="function()">Convertir chat a pdf</button> 
+    <button type="button" onclick="createPDF()">Convertir chat a pdf</button> 
+    <div id="elementH"></div>
     <h2>Usuarios online:</h2>
     <ul id="usersOnline">
     </ul>  
-    <script>jos00098
+    <script>
         var io = io();
         var doc = new jsPDF();
         var container = document.getElementById('editor');
@@ -77,6 +78,20 @@
           theme: 'snow',
           placeholder: 'Escribe un documento...',
         });
+        function createPDF(){
+          var doc = new jsPDF();
+          var elementHTML = $('#editor').html();
+          var specialElementHandlers = {
+            '#editor': function (element, renderer) {
+                return true;
+            }
+          };
+          doc.fromHTML(elementHTML, 15, 15, {
+              'width': 170,
+              'elementHandlers': specialElementHandlers
+          });
+          doc.save('sample-document.pdf');
+        }
         function imageHandler() {
             var range = quill.getSelection();
             var value = prompt('What is the image URL');
@@ -107,20 +122,17 @@
             }
           })
         io.on('sendUserTyping', function(user){
-          console.log("c"+user)
           crearEscribiendo(user)
         })
         var editorContent = document.getElementById("editor").childNodes[0]
         $(document).ready(function() {
           $(document).keydown (function(e) {
-            console.log("a")
             io.emit('userTyping', usuario)
             crearEscribiendo(usuario)
           });
         });
         setTimeout(() => quill.setSelection(cursor.index, cursor.index), 0)
         $(editorContent).keyup('input',function(){
-          console.log("shit")
           setTimeout(() => updatearTexto(), 100)
         });
         $("body").on('mouseup',function(){
